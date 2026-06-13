@@ -1,0 +1,456 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hearting Gestures</title>
+    <link rel="stylesheet" href="style.css">
+    <!-- MediaPipe Hands -->
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands/hands.js" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/drawing_utils/drawing_utils.js" crossorigin="anonymous"></script>
+    <!-- No TensorFlow needed — pure JS MLP inference from model_weights.json -->
+</head>
+<body>
+
+<!-- Loading overlay shown while model initializes -->
+<div id="model-loading">
+    <div class="spinner"></div>
+    <span>Завантаження моделі… / Loading model…</span>
+</div>
+
+<!-- ─── Sidebar ─────────────────────────────────────────────── -->
+<nav id="sidebar">
+    <img class="sidebar-icon" src="images/icon.svg" alt="icon" onerror="this.style.display='none'">
+    <div class="sidebar-title">Hearting<br>Gestures</div>
+    <div class="sidebar-nav" id="sidebar-nav">
+        <button class="nav-link active" data-page="about"><span id="nav-about">Про проект</span></button>
+        <button class="nav-link" data-page="rules"><span id="nav-rules">Правила гри</span></button>
+        <button class="nav-link" data-page="learning"><span id="nav-learning">Навчальні матеріали</span></button>
+        <button class="nav-link" data-page="game"><span id="nav-game">Гра</span></button>
+        <button class="nav-link" data-page="help"><span id="nav-help">Допомогти проекту</span></button>
+        <button class="nav-link" data-page="partners"><span id="nav-partners">Партнери / ГО</span></button>
+    </div>
+    <div class="lang-toggle">
+        <button class="lang-btn active" id="btn-uk" onclick="setLang('uk')">УКР</button>
+        <button class="lang-btn" id="btn-en" onclick="setLang('en')">ENG</button>
+    </div>
+</nav>
+
+<!-- ─── Main content ──────────────────────────────────────────── -->
+<main id="main-content">
+<div class="content-inner">
+
+    <!-- ── About Us ───────────────────────────────────────────── -->
+    <section id="page-about" class="page-section">
+        <div class="page-hero">
+            <div class="title_header" id="about-title">Про нас</div>
+            <p id="about-tagline">Hearting Gestures — гра для вивчення жестового алфавіту</p>
+        </div>
+        <img class="banner-img" src="images/1.svg" alt="banner" onerror="this.style.display='none'">
+        <div class="card">
+            <div class="card-body" id="about-text">
+                Ми — група підлітків, учасниці міжнародного проекту <strong>Technovation Girls</strong>.
+                Ми довго обирали тему і зупинилися на інклюзії.
+                Наша мрія — допомагати дітям з вадами слуху вливатися у сучасне суспільство,
+                рухатися вперед і не відчувати себе зайвими.
+                Так народилась ідея доступної гри для навчання жестового українського алфавіту,
+                яка об'єднує людей різних культур і середовищ.
+            </div>
+        </div>
+        <div class="divider"></div>
+        <div class="card">
+            <div class="card-title" id="mission-title">Місія</div>
+            <div class="card-body" id="mission-text">Сприяти розвитку інклюзивного суспільства, де кожен має голос.</div>
+        </div>
+        <div class="card">
+            <div class="card-title" id="vision-title">Візія</div>
+            <div class="card-body" id="vision-text">
+                Світ, у якому мовне різноманіття сприймається як сила,
+                а кожна людина — незалежно від її здатності чути —
+                має рівний доступ до спілкування, освіти й можливостей.
+            </div>
+        </div>
+        <div class="card">
+            <div class="card-title" id="goal-title">Мета</div>
+            <div class="card-body" id="goal-text">
+                Сприяти побудові інклюзивного суспільства, де жестова мова є природною частиною взаємодії,
+                а технології стають засобом рівності, підтримки та взаєморозуміння.
+            </div>
+        </div>
+    </section>
+
+    <!-- ── Game Rules ──────────────────────────────────────────── -->
+    <section id="page-rules" class="page-section" style="display:none">
+        <div class="page-hero">
+            <div class="title_header" id="rules-title">Правила гри</div>
+            <p id="rules-tagline">Як грати в Hearting Gestures</p>
+        </div>
+
+        <div class="step-card">
+            <div class="step-number">1</div>
+            <div class="step-text" id="rule-1">Обери рівень складності. Гра побудована на жестах алфавіту української мови.</div>
+        </div>
+        <div class="rule-img-center">
+            <img src="images/2.1.svg" alt="" onerror="this.style.display='none'" style="width:280px;border-radius:12px;">
+        </div>
+
+        <div class="step-card">
+            <div class="step-number">2</div>
+            <div class="step-text" id="rule-2">На екрані з'явиться вікно камери — виконуй жести, і система розпізнає їх за допомогою скелетної моделі руки.</div>
+        </div>
+
+        <div class="step-card">
+            <div class="step-number">3</div>
+            <div class="step-text" id="rule-3">Усі жести виконуються <strong>правою рукою</strong>.</div>
+        </div>
+
+        <div class="step-card">
+            <div class="step-number">4</div>
+            <div class="step-text" id="rule-4">Слово відображається як серія пропусків (<strong>_</strong>). Кожна невгадана літера залишається підкресленням.</div>
+        </div>
+        <div class="rule-img-pair">
+            <img src="images/3.svg" alt="" onerror="this.style.display='none'">
+            <img src="images/6.svg" alt="" onerror="this.style.display='none'">
+        </div>
+
+        <div class="step-card">
+            <div class="step-number">5</div>
+            <div class="step-text" id="rule-5">Тримай руку в одному положенні ~2 секунди — система зафіксує жест. Прогрес-бар показує час утримання.</div>
+        </div>
+        <div class="rule-img-center">
+            <img src="images/hardwinn.svg" alt="" onerror="this.style.display='none'" style="width:160px;">
+        </div>
+
+        <div class="step-card">
+            <div class="step-number">6</div>
+            <div class="step-text" id="rule-6">Букви <strong>Ґ Д Є З Ї Й К Ц Щ Ь</strong> відсутні — вони нестатичні.</div>
+        </div>
+
+        <div class="step-card">
+            <div class="step-number">7</div>
+            <div class="step-text" id="rule-7">За кожну помилку квітка втрачає пелюстку. Відгадай усі літери — і квітка розквітне!</div>
+        </div>
+    </section>
+
+    <!-- ── Learning Materials ──────────────────────────────────── -->
+    <section id="page-learning" class="page-section" style="display:none">
+        <div class="page-hero">
+            <div class="title_header" id="learning-title">Навчальні матеріали</div>
+            <p id="learning-tagline">Відео та ресурси для вивчення жестового алфавіту</p>
+        </div>
+
+        <div class="section-tag" id="links-label">Корисні посилання</div>
+        <div class="card">
+            <div class="card-body" id="links-content">
+                <a href="https://spreadthesign.com/uk.ua/search/?cls=1" target="_blank">Spread The Sign — онлайн-словник жестів</a><br><br>
+                <a href="https://megogo.net/ua/view/3820211-kurs-zhestovo-movi-ukra-nskoyu-movoyu.html" target="_blank">Курс жестової мови на Megogo</a>
+            </div>
+        </div>
+        <div class="divider"></div>
+
+        <div class="section-tag" id="easy-label">Легкий рівень</div>
+        <div class="video-grid" id="easy-videos"></div>
+        <div class="divider"></div>
+
+        <div class="section-tag" id="medium-label">Середній рівень</div>
+        <div class="video-grid" id="medium-videos"></div>
+        <div class="divider"></div>
+
+        <div class="section-tag" id="hard-label">Складний рівень</div>
+        <div class="video-grid" id="hard-videos"></div>
+    </section>
+
+    <!-- ── Game ───────────────────────────────────────────────── -->
+    <section id="page-game" class="page-section" style="display:none">
+        <!-- Rendered dynamically by game.js renderGame() -->
+    </section>
+
+    <!-- ── Help ───────────────────────────────────────────────── -->
+    <section id="page-help" class="page-section" style="display:none">
+        <div class="page-hero">
+            <div class="title_header" id="help-title">Допомогти проєкту</div>
+            <p id="help-tagline">Разом будуємо інклюзивне майбутнє</p>
+        </div>
+        <div class="card">
+            <div class="card-title" id="join-title">Приєднуйтесь до нас</div>
+            <div class="card-body" id="join-text">
+                Станьте частиною нашої спільноти — разом ми можемо змінити світ!<br><br>
+                З питань та пропозицій звертайтесь:
+                <a href="mailto:hartingestures@gmail.com">hartingestures@gmail.com</a>
+            </div>
+        </div>
+        <div class="card">
+            <div class="card-title" id="feedback-title">Ваші відгуки — важливі для нас</div>
+            <div class="card-body" id="feedback-text">
+                <strong>Нам важлива ваша думка!</strong>
+                Якщо у вас є ідеї щодо покращення гри або ви хочете поділитися враженнями — напишіть нам!<br><br>
+                <a href="https://docs.google.com/forms/d/e/1FAIpQLScAlVmTQe6wKm4U7bqtnEbU8pravDP0XuGnP7ZlMWWw9SPSHA/viewform?usp=header" target="_blank">Надіслати відгук</a>
+            </div>
+        </div>
+        <div class="card">
+            <div class="card-title" id="spread-title">Розповсюдження інформації</div>
+            <div class="card-body" id="spread-text">
+                Розкажіть про наш проєкт друзям, у соцмережах чи на заходах.<br><br>
+                <a href="https://www.instagram.com/heartingestures_/profilecard/?igsh=bHd2bGJnaWg4Ynp4" target="_blank">Наш Instagram</a>
+            </div>
+        </div>
+        <div class="card">
+            <div class="card-title" id="partner-title">Партнерство</div>
+            <div class="card-body" id="partner-text">
+                Ми відкриті для співпраці з організаціями, що поділяють наші цінності!<br>
+                Напишіть нам: <a href="mailto:hartingestures@gmail.com">hartingestures@gmail.com</a>
+            </div>
+        </div>
+        <div class="sign-off" id="sign-off">З повагою, команда Grlpwr</div>
+    </section>
+
+    <!-- ── Partners ────────────────────────────────────────────── -->
+    <section id="page-partners" class="page-section" style="display:none">
+        <div class="page-hero">
+            <div class="title_header" id="partners-title">Партнери / ГО</div>
+            <p id="partners-tagline">Організації, що об'єднують людей з порушеннями слуху</p>
+        </div>
+        <div class="partner-card">
+            <img src="https://cnap-pl.gov.ua/UTOG_OVAL.png" alt="УТОГ">
+            <div>
+                <div class="partner-name" id="utog-name">УТОГ</div>
+                <div class="partner-body" id="utog-text">
+                    Всеукраїнська громадська організація людей з вадами слуху, заснована у <strong>1933 році</strong>.
+                    Є членом Всесвітньої федерації глухих.
+                    Регіональні та територіальні організації УТОГ об'єднують понад <strong>50 000 громадян</strong> України з порушеннями слуху та мови.
+                </div>
+            </div>
+        </div>
+        <div class="partner-card">
+            <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcT2LzUJRpQ_EDlyT0Wgkl9ccfboOfBD3f6n3A&s" alt="ІНВАСПОРТ">
+            <div>
+                <div class="partner-name" id="invasport-name">ІНВАСПОРТ</div>
+                <div class="partner-body" id="invasport-text">
+                    Всеукраїнська громадська організація спортивного спрямування.
+                    Спортивна федерація глухих України забезпечує розвиток <strong>олімпійського руху</strong> і спорту для людей з вадами слуху по всій країні.
+                </div>
+            </div>
+        </div>
+        <div class="partner-card">
+            <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRa7-D_kDabaXFJgBVHmstmmsyAZfTLstru9A&s" alt="ПОГ">
+            <div>
+                <div class="partner-name" id="pog-name">ПОГ — Центр соціального бізнесу</div>
+                <div class="partner-body" id="pog-text">
+                    Надає послуги перекладу жестової мови у будь-якому зручному форматі.
+                    Оскільки багато сучасних слів не існують у жестовій мові,
+                    команда активно використовує <strong>українську дактильну абетку</strong>.
+                    Також проводить заходи з безбар'єрності.
+                </div>
+            </div>
+        </div>
+    </section>
+
+</div><!-- .content-inner -->
+</main>
+
+<script src="game.js"></script>
+<script>
+// ─── All translatable texts ────────────────────────────────────
+window.currentLang = 'uk';
+
+window.texts = {
+    uk: {
+        nav: ['Про проект','Правила гри','Навчальні матеріали','Гра','Допомогти проекту','Партнери / ГО'],
+        game_title: 'Гра',
+        game_tagline: 'Оберіть рівень складності та починайте',
+        play_btn: 'Грати',
+        back_btn: 'Назад до меню',
+        win_msg: 'Чудово! Ви склали все слово!',
+        camera_note: 'Покажіть жест / Show your gesture',
+        camera_label: 'Очікування жесту…',
+        show_gesture: 'Покажіть жест для літери',
+        detected_label: 'Розпізнано',
+        wrong_label: 'Ваш жест (неправильно)',
+        model_loading: '⏳ Модель завантажується…',
+        levels: [
+            { name: 'Легкий', desc: 'Прості слова,\nідеально для початку' },
+            { name: 'Середній', desc: 'Складніші слова,\nдля практики' },
+            { name: 'Складний', desc: 'Для досвідчених,\nрізноманітні слова' },
+        ],
+        links_label: 'Корисні посилання',
+        easy_label: 'Легкий рівень',
+        medium_label: 'Середній рівень',
+        hard_label: 'Складний рівень',
+    },
+    en: {
+        nav: ['About Us','Game Rules','Educational Materials','Game','Support Project','Partners / NGOs'],
+        game_title: 'Game',
+        game_tagline: 'Choose a difficulty level and start playing',
+        play_btn: 'Play',
+        back_btn: 'Back to Menu',
+        win_msg: 'Great! You spelled the whole word!',
+        camera_note: 'Show your gesture / Покажіть жест',
+        camera_label: 'Waiting for gesture…',
+        show_gesture: 'Show gesture for letter',
+        detected_label: 'Detected',
+        wrong_label: 'Your gesture (wrong)',
+        model_loading: '⏳ Loading model…',
+        levels: [
+            { name: 'Easy', desc: 'Simple words,\nperfect for beginners' },
+            { name: 'Medium', desc: 'Harder words,\nfor practice' },
+            { name: 'Hard', desc: 'For experienced players,\nvaried words' },
+        ],
+        links_label: 'Useful Links',
+        easy_label: 'Easy Level',
+        medium_label: 'Medium Level',
+        hard_label: 'Hard Level',
+    },
+};
+
+// ─── Navigation ────────────────────────────────────────────────
+const pages = ['about','rules','learning','game','help','partners'];
+
+function showPage(id) {
+    pages.forEach(p => {
+        document.getElementById('page-' + p).style.display = (p === id) ? '' : 'none';
+    });
+    document.querySelectorAll('.nav-link').forEach(btn => {
+        btn.classList.toggle('active', btn.dataset.page === id);
+    });
+    // Stop camera if leaving game page
+    if (id !== 'game' && typeof stopCamera === 'function') stopCamera();
+    // Initialize game render when entering game page
+    if (id === 'game') renderGame();
+    // Build video grid when entering learning page
+    if (id === 'learning') buildVideoGrids();
+}
+
+document.querySelectorAll('.nav-link').forEach(btn => {
+    btn.addEventListener('click', () => showPage(btn.dataset.page));
+});
+
+// ─── Language switching ────────────────────────────────────────
+const TRANSLATIONS = {
+    // about page
+    'about-title':   { uk: 'Про нас', en: 'About Us' },
+    'about-tagline': { uk: 'Hearting Gestures — гра для вивчення жестового алфавіту', en: 'Hearting Gestures — a game for learning the sign alphabet' },
+    'about-text': {
+        uk: 'Ми — група підлітків, учасниці міжнародного проекту <strong>Technovation Girls</strong>. Ми довго обирали тему і зупинилися на інклюзії. Наша мрія — допомагати дітям з вадами слуху вливатися у сучасне суспільство, рухатися вперед і не відчувати себе зайвими. Так народилась ідея доступної гри для навчання жестового українського алфавіту, яка об\'єднує людей різних культур і середовищ.',
+        en: 'We are a group of teenagers participating in the international project <strong>Technovation Girls</strong>. We spent a long time choosing our topic and settled on inclusion. Our dream is to help children with hearing impairments integrate into modern society, move forward, and not feel left out. This sparked the idea for an accessible game to teach the Ukrainian sign language alphabet, bringing together people from different cultures and backgrounds.',
+    },
+    'mission-title': { uk: 'Місія', en: 'Mission' },
+    'mission-text':  { uk: 'Сприяти розвитку інклюзивного суспільства, де кожен має голос.', en: 'To promote the development of an inclusive society where everyone has a voice.' },
+    'vision-title':  { uk: 'Візія', en: 'Vision' },
+    'vision-text':   { uk: 'Світ, у якому мовне різноманіття сприймається як сила, а кожна людина — незалежно від її здатності чути — має рівний доступ до спілкування, освіти й можливостей.', en: 'A world where linguistic diversity is embraced as a strength, and every person — regardless of their ability to hear — has equal access to communication, education, and opportunities.' },
+    'goal-title':    { uk: 'Мета', en: 'Goal' },
+    'goal-text':     { uk: 'Сприяти побудові інклюзивного суспільства, де жестова мова є природною частиною взаємодії, а технології стають засобом рівності, підтримки та взаєморозуміння.', en: 'To help build an inclusive society where sign language is a natural part of interaction, and technology becomes a means of equality, support, and understanding.' },
+    // rules page
+    'rules-title':   { uk: 'Правила гри', en: 'Game Rules' },
+    'rules-tagline': { uk: 'Як грати в Hearting Gestures', en: 'How to play Hearting Gestures' },
+    'rule-1': { uk: 'Обери рівень складності. Гра побудована на жестах алфавіту української мови.', en: 'Choose a difficulty level. The game uses gestures of the Ukrainian sign alphabet.' },
+    'rule-2': { uk: 'На екрані з\'явиться вікно камери — виконуй жести, і система розпізнає їх за допомогою скелетної моделі руки.', en: 'A camera window will appear — perform gestures and the system will recognise them using a hand skeleton model.' },
+    'rule-3': { uk: 'Усі жести виконуються <strong>правою рукою</strong>.', en: 'All gestures are performed with the <strong>right hand</strong>.' },
+    'rule-4': { uk: 'Слово відображається як серія пропусків (<strong>_</strong>). Кожна невгадана літера залишається підкресленням.', en: 'The word is shown as a series of blanks (<strong>_</strong>). Each unguessed letter stays as an underscore.' },
+    'rule-5': { uk: 'Тримай руку в одному положенні ~2 секунди — система зафіксує жест. Прогрес-бар показує час утримання.', en: 'Hold your hand still for ~2 seconds — the system will register your gesture. A progress bar shows the hold time.' },
+    'rule-6': { uk: 'Букви <strong>Ґ Д Є З Ї Й К Ц Щ Ь</strong> відсутні — вони нестатичні.', en: 'The letters <strong>Ґ Д Є З Ї Й К Ц Щ Ь</strong> are absent — they are not static signs.' },
+    'rule-7': { uk: 'За кожну помилку квітка втрачає пелюстку. Відгадай усі літери — і квітка розквітне!', en: 'Each wrong answer removes a petal from the flower. Guess all letters — the flower blooms!' },
+    // learning page
+    'learning-title':   { uk: 'Навчальні матеріали', en: 'Educational Materials' },
+    'learning-tagline': { uk: 'Відео та ресурси для вивчення жестового алфавіту', en: 'Videos and resources for learning the sign alphabet' },
+    'links-label':   { uk: 'Корисні посилання', en: 'Useful Links' },
+    'links-content': {
+        uk: '<a href="https://spreadthesign.com/uk.ua/search/?cls=1" target="_blank">Spread The Sign — онлайн-словник жестів</a><br><br><a href="https://megogo.net/ua/view/3820211-kurs-zhestovo-movi-ukra-nskoyu-movoyu.html" target="_blank">Курс жестової мови на Megogo</a>',
+        en: '<a href="https://spreadthesign.com/uk.ua/search/?cls=1" target="_blank">Spread The Sign — online sign dictionary</a><br><br><a href="https://megogo.net/ua/view/3820211-kurs-zhestovo-movi-ukra-nskoyu-movoyu.html" target="_blank">Sign language course on Megogo</a>',
+    },
+    'easy-label':   { uk: 'Легкий рівень', en: 'Easy Level' },
+    'medium-label': { uk: 'Середній рівень', en: 'Medium Level' },
+    'hard-label':   { uk: 'Складний рівень', en: 'Hard Level' },
+    // help page
+    'help-title':     { uk: 'Допомогти проєкту', en: 'Support the Project' },
+    'help-tagline':   { uk: 'Разом будуємо інклюзивне майбутнє', en: 'Together we build an inclusive future' },
+    'join-title':     { uk: 'Приєднуйтесь до нас', en: 'Join Us' },
+    'join-text':      { uk: 'Станьте частиною нашої спільноти — разом ми можемо змінити світ!<br><br>З питань та пропозицій звертайтесь: <a href="mailto:hartingestures@gmail.com">hartingestures@gmail.com</a>', en: 'Become part of our community — together we can change the world!<br><br>For questions and suggestions: <a href="mailto:hartingestures@gmail.com">hartingestures@gmail.com</a>' },
+    'feedback-title': { uk: 'Ваші відгуки — важливі для нас', en: 'Your Feedback Matters' },
+    'feedback-text':  { uk: '<strong>Нам важлива ваша думка!</strong> Якщо у вас є ідеї щодо покращення гри або ви хочете поділитися враженнями — напишіть нам!<br><br><a href="https://docs.google.com/forms/d/e/1FAIpQLScAlVmTQe6wKm4U7bqtnEbU8pravDP0XuGnP7ZlMWWw9SPSHA/viewform?usp=header" target="_blank">Надіслати відгук</a>', en: '<strong>Your opinion is important to us!</strong> If you have ideas for improving the game or want to share your impressions — write to us!<br><br><a href="https://docs.google.com/forms/d/e/1FAIpQLScAlVmTQe6wKm4U7bqtnEbU8pravDP0XuGnP7ZlMWWw9SPSHA/viewform?usp=header" target="_blank">Send Feedback</a>' },
+    'spread-title':   { uk: 'Розповсюдження інформації', en: 'Spread the Word' },
+    'spread-text':    { uk: 'Розкажіть про наш проєкт друзям, у соцмережах чи на заходах.<br><br><a href="https://www.instagram.com/heartingestures_/profilecard/?igsh=bHd2bGJnaWg4Ynp4" target="_blank">Наш Instagram</a>', en: 'Tell your friends about our project, share it on social media or at events.<br><br><a href="https://www.instagram.com/heartingestures_/profilecard/?igsh=bHd2bGJnaWg4Ynp4" target="_blank">Our Instagram</a>' },
+    'partner-title':  { uk: 'Партнерство', en: 'Partnership' },
+    'partner-text':   { uk: 'Ми відкриті для співпраці з організаціями, що поділяють наші цінності!<br>Напишіть нам: <a href="mailto:hartingestures@gmail.com">hartingestures@gmail.com</a>', en: 'We are open to cooperation with organisations that share our values!<br>Write to us: <a href="mailto:hartingestures@gmail.com">hartingestures@gmail.com</a>' },
+    'sign-off':       { uk: 'З повагою, команда Grlpwr', en: 'Respectfully, Grlpwr Team' },
+    // partners page
+    'partners-title':    { uk: 'Партнери / ГО', en: 'Partners / NGOs' },
+    'partners-tagline':  { uk: 'Організації, що об\'єднують людей з порушеннями слуху', en: 'Organisations uniting people with hearing impairments' },
+    'utog-name':         { uk: 'УТОГ', en: 'UTOG' },
+    'utog-text':         { uk: 'Всеукраїнська громадська організація людей з вадами слуху, заснована у <strong>1933 році</strong>. Є членом Всесвітньої федерації глухих. Регіональні та територіальні організації УТОГ об\'єднують понад <strong>50 000 громадян</strong> України з порушеннями слуху та мови.', en: 'The All-Ukrainian Public Organisation of People with Hearing Impairments, founded in <strong>1933</strong>. A member of the World Federation of the Deaf. Regional and territorial UTOG organisations unite over <strong>50,000 Ukrainian citizens</strong> with hearing and speech impairments.' },
+    'invasport-name':    { uk: 'ІНВАСПОРТ', en: 'INVASPORT' },
+    'invasport-text':    { uk: 'Всеукраїнська громадська організація спортивного спрямування. Спортивна федерація глухих України забезпечує розвиток <strong>олімпійського руху</strong> і спорту для людей з вадами слуху по всій країні.', en: 'An all-Ukrainian public sports organisation. The Sports Federation of the Deaf of Ukraine ensures the development of the <strong>Olympic movement</strong> and sports for people with hearing disabilities across the country.' },
+    'pog-name':          { uk: 'ПОГ — Центр соціального бізнесу', en: 'POG — Centre for Social Business' },
+    'pog-text':          { uk: 'Надає послуги перекладу жестової мови у будь-якому зручному форматі. Оскільки багато сучасних слів не існують у жестовій мові, команда активно використовує <strong>українську дактильну абетку</strong>. Також проводить заходи з безбар\'єрності.', en: 'Provides sign language interpretation services in any convenient format. Since many modern words have no sign equivalent, the team actively uses the <strong>Ukrainian dactylic alphabet</strong>. They also organise accessibility and barrier-free events.' },
+    // nav labels
+    'nav-about':    { uk: 'Про проект', en: 'About Us' },
+    'nav-rules':    { uk: 'Правила гри', en: 'Game Rules' },
+    'nav-learning': { uk: 'Навчальні матеріали', en: 'Educational Materials' },
+    'nav-game':     { uk: 'Гра', en: 'Game' },
+    'nav-help':     { uk: 'Допомогти проекту', en: 'Support Project' },
+    'nav-partners': { uk: 'Партнери / ГО', en: 'Partners / NGOs' },
+};
+
+function setLang(lang) {
+    window.currentLang = lang;
+    document.getElementById('btn-uk').classList.toggle('active', lang === 'uk');
+    document.getElementById('btn-en').classList.toggle('active', lang === 'en');
+
+    // Apply all static translations
+    for (const [id, vals] of Object.entries(TRANSLATIONS)) {
+        const el = document.getElementById(id);
+        if (el) el.innerHTML = vals[lang];
+    }
+
+    // Re-render game if visible
+    const gamePage = document.getElementById('page-game');
+    if (gamePage && gamePage.style.display !== 'none') renderGame();
+
+    // Rebuild video section labels
+    buildVideoGrids();
+}
+
+// ─── Video grid builder ────────────────────────────────────────
+const EASY_PAIRS = [
+    ['Y3yPvsOLc5k','А'],['8j7KZnsBfhY','Е'],['B78Ou5oPtdo','И'],
+    ['02Cb_huQRmw','О'],['B78Ou5oPtdo','Н'],['m2pcbkZKQCU','П'],
+    ['LJjonvptVAo','С'],['WeBxscv_iFE','Т'],['nJfXbqjyaB4','Л'],['9ivfqYlRQw4','М'],
+];
+const MEDIUM_PAIRS = [
+    ['Y3yPvsOLc5k','А'],['A4kQCBdG5HA','Б'],['q_6cni-XkUY','В'],
+    ['8j7KZnsBfhY','Е'],['B78Ou5oPtdo','И'],['uCRSEbYOys4','І'],
+    ['B78Ou5oPtdo','Н'],['nJfXbqjyaB4','Л'],['9ivfqYlRQw4','М'],
+    ['02Cb_huQRmw','О'],['m2pcbkZKQCU','П'],['2Xzzg2Qk_zA','Р'],
+    ['LJjonvptVAo','С'],['WeBxscv_iFE','Т'],['LfGdX20yQ_g','У'],
+];
+const HARD_PAIRS = [
+    ['Y3yPvsOLc5k','А'],['A4kQCBdG5HA','Б'],['q_6cni-XkUY','В'],
+    ['X2ymxV1SB_M','Г'],['8j7KZnsBfhY','Е'],['teAEIt6anLE','Ж'],
+    ['B78Ou5oPtdo','И'],['uCRSEbYOys4','І'],['nJfXbqjyaB4','Л'],
+    ['9ivfqYlRQw4','М'],['B78Ou5oPtdo','Н'],['02Cb_huQRmw','О'],
+    ['m2pcbkZKQCU','П'],['2Xzzg2Qk_zA','Р'],['LJjonvptVAo','С'],
+    ['WeBxscv_iFE','Т'],['LfGdX20yQ_g','У'],['b41xE7IH5DM','Ф'],
+    ['S1Mz4FtK3y0','Х'],['o-UzR-smI90','Ч'],['uqcAzaxvmQg','Ш'],
+    ['s5pHhi0l_ZY','Ю'],['Ziqz_58nOVo','Я'],
+];
+
+function buildVideoGrids() {
+    renderVideoGrid('easy-videos', EASY_PAIRS);
+    renderVideoGrid('medium-videos', MEDIUM_PAIRS);
+    renderVideoGrid('hard-videos', HARD_PAIRS);
+}
+
+function renderVideoGrid(containerId, pairs) {
+    const container = document.getElementById(containerId);
+    if (!container) return;
+    container.innerHTML = pairs.map(([id, letter]) => `
+        <div class="video-item">
+            <iframe src="https://www.youtube.com/embed/${id}" allowfullscreen loading="lazy" title="${letter}"></iframe>
+            <div class="letter-badge">${letter}</div>
+        </div>`).join('');
+}
+
+// Build video grids on first load
+buildVideoGrids();
+</script>
+</body>
+</html>
