@@ -89,9 +89,6 @@
             <div class="step-number">1</div>
             <div class="step-text" id="rule-1">Обери рівень складності. Гра побудована на жестах алфавіту української мови.</div>
         </div>
-        <div class="rule-img-center">
-            <img src="images/2.1.svg" alt="" onerror="this.style.display='none'" style="width:280px;border-radius:12px;">
-        </div>
 
         <div class="step-card">
             <div class="step-number">2</div>
@@ -100,34 +97,12 @@
 
         <div class="step-card">
             <div class="step-number">3</div>
-            <div class="step-text" id="rule-3">Усі жести виконуються <strong>правою рукою</strong>.</div>
+            <div class="step-text" id="rule-4">Слово відображається як серія пропусків (<strong>_</strong>). Кожна невгадана літера залишається підкресленням.</div>
         </div>
 
         <div class="step-card">
             <div class="step-number">4</div>
-            <div class="step-text" id="rule-4">Слово відображається як серія пропусків (<strong>_</strong>). Кожна невгадана літера залишається підкресленням.</div>
-        </div>
-        <div class="rule-img-pair">
-            <img src="images/3.svg" alt="" onerror="this.style.display='none'">
-            <img src="images/6.svg" alt="" onerror="this.style.display='none'">
-        </div>
-
-        <div class="step-card">
-            <div class="step-number">5</div>
             <div class="step-text" id="rule-5">Тримай руку в одному положенні ~2 секунди — система зафіксує жест. Прогрес-бар показує час утримання.</div>
-        </div>
-        <div class="rule-img-center">
-            <img src="images/hardwinn.svg" alt="" onerror="this.style.display='none'" style="width:160px;">
-        </div>
-
-        <div class="step-card">
-            <div class="step-number">6</div>
-            <div class="step-text" id="rule-6">Букви <strong>Ґ Д Є З Ї Й К Ц Щ Ь</strong> відсутні — вони нестатичні.</div>
-        </div>
-
-        <div class="step-card">
-            <div class="step-number">7</div>
-            <div class="step-text" id="rule-7">За кожну помилку квітка втрачає пелюстку. Відгадай усі літери — і квітка розквітне!</div>
         </div>
     </section>
 
@@ -345,11 +320,8 @@ const TRANSLATIONS = {
     'rules-tagline': { uk: 'Як грати в Hearting Gestures', en: 'How to play Hearting Gestures' },
     'rule-1': { uk: 'Обери рівень складності. Гра побудована на жестах алфавіту української мови.', en: 'Choose a difficulty level. The game uses gestures of the Ukrainian sign alphabet.' },
     'rule-2': { uk: 'На екрані з\'явиться вікно камери — виконуй жести, і система розпізнає їх за допомогою скелетної моделі руки.', en: 'A camera window will appear — perform gestures and the system will recognise them using a hand skeleton model.' },
-    'rule-3': { uk: 'Усі жести виконуються <strong>правою рукою</strong>.', en: 'All gestures are performed with the <strong>right hand</strong>.' },
     'rule-4': { uk: 'Слово відображається як серія пропусків (<strong>_</strong>). Кожна невгадана літера залишається підкресленням.', en: 'The word is shown as a series of blanks (<strong>_</strong>). Each unguessed letter stays as an underscore.' },
     'rule-5': { uk: 'Тримай руку в одному положенні ~2 секунди — система зафіксує жест. Прогрес-бар показує час утримання.', en: 'Hold your hand still for ~2 seconds — the system will register your gesture. A progress bar shows the hold time.' },
-    'rule-6': { uk: 'Букви <strong>Ґ Д Є З Ї Й К Ц Щ Ь</strong> відсутні — вони нестатичні.', en: 'The letters <strong>Ґ Д Є З Ї Й К Ц Щ Ь</strong> are absent — they are not static signs.' },
-    'rule-7': { uk: 'За кожну помилку квітка втрачає пелюстку. Відгадай усі літери — і квітка розквітне!', en: 'Each wrong answer removes a petal from the flower. Guess all letters — the flower blooms!' },
     // learning page
     'learning-title':   { uk: 'Навчальні матеріали', en: 'Educational Materials' },
     'learning-tagline': { uk: 'Відео та ресурси для вивчення жестового алфавіту', en: 'Videos and resources for learning the sign alphabet' },
