@@ -18,6 +18,12 @@
     <span>Завантаження моделі… / Loading model…</span>
 </div>
 
+<!-- ─── Mobile hamburger button ───────────────────────────────── -->
+<button id="hamburger" onclick="toggleSidebar()" aria-label="Menu">
+    <span></span><span></span><span></span>
+</button>
+<div id="sidebar-backdrop" onclick="closeSidebar()"></div>
+
 <!-- ─── Sidebar ─────────────────────────────────────────────── -->
 <nav id="sidebar">
     <div class="sidebar-title">Heart in Gestures</div>
@@ -297,8 +303,17 @@ function showPage(id) {
 }
 
 document.querySelectorAll('.nav-link').forEach(btn => {
-    btn.addEventListener('click', () => showPage(btn.dataset.page));
+    btn.addEventListener('click', () => { showPage(btn.dataset.page); closeSidebar(); });
 });
+
+function toggleSidebar() {
+    document.getElementById('sidebar').classList.toggle('open');
+    document.getElementById('sidebar-backdrop').classList.toggle('open');
+}
+function closeSidebar() {
+    document.getElementById('sidebar').classList.remove('open');
+    document.getElementById('sidebar-backdrop').classList.remove('open');
+}
 
 // ─── Language switching ────────────────────────────────────────
 const TRANSLATIONS = {
