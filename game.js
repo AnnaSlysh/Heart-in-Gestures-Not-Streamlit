@@ -7,20 +7,21 @@ const LETTER_MAP = {
     'C':'С','F':'Ф','SH':'Ш','YU':'Ю','X':'Х','CH':'Ч','B':'Б'
 };
 
-// ─── Word lists ───────────────────────────────────────────────
+// Letters that require motion (dynamic gestures)
+const DYNAMIC_LETTERS = new Set([...'ҐДЄЗЇЙКЦЩЬ']);
+const DYNAMIC_LABELS  = ['Ґ','Д','Є','З','Ї','Й','К','Ц','Щ','Ь'];
+const DYNAMIC_FRAMES  = 16;   // frames to collect (model input = 16×42 = 672)
+
+// ─── Word lists (all letters, static + dynamic) ───────────────
 const WORDS = {
-    easy: ['ЛАМПА','МЕТА','СИЛА','ЛИСТ','ТЕПЛО','ПАН','СЕЛО','МАТИ','ПОЛЕ','САЛО','ЛОТО','ТОН','СТАН','СМОЛА','ЛИПА','СИН','НАСИП','ЛОТОС','КІТ','КОТ','КАЗКА','ЗИМА','НОГА','КИТ','ДІМ','ЛЕД'],
-    medium: ['МІСТО','ІСПИТ','РОБОТА','МОТИВ','НЕБО','МІСТ','ВИСОТА','СУМА','ПЕРО','ТІСТО','СТІЛ','ВІТЕР','ТУМАН','ВЕЧІР','ПОБУТ','ЛІТР','СТОВП','БЕТОН','КОЗАК','ДЕРЕВО','ЗЕРНО','КОБРА','ДВЕРІ','ЗІРКА','ЦИРК'],
-    hard: ['УСПІХ','ГУМОР','ШИЯ','ЮРИСТ','СИМВОЛ','ФАХ','СПАЛАХ','ІНЖЕНЕР','ЛЮБОВ','ПЕЧИВО','ЛИСТЯ','ФОРМА','ГОРА','ХВІСТ','ФАНЕРА','ШТАНИ','СТРУМ','ДЕРЖАВА','ЄДНІСТЬ','ЦІННІСТЬ','ЩЕДРІСТЬ','ДРУЖБА','КУЛЬТУРА'],
+    easy: ['ЛАМПА','МЕТА','СИЛА','ЛИСТ','ТЕПЛО','ПАН','СЕЛО','МАТИ','ПОЛЕ','САЛО','ЛОТО','ТОН','СТАН','СМОЛА','ЛИПА','СИН','НАСИП','ЛОТОС',
+           'КІТ','КОТ','КАЗКА','ЗИМА','НОГА','КИТ','ДІМ','ЛЕД'],
+    medium: ['МІСТО','ІСПИТ','РОБОТА','МОТИВ','НЕБО','МІСТ','ВИСОТА','СУМА','ПЕРО','ТІСТО','СТІЛ','ВІТЕР','ТУМАН','ВЕЧІР','ПОБУТ','ЛІТР','СТОВП','БЕТОН',
+             'КОЗАК','ДЕРЕВО','ЗЕРНО','КОБРА','ДВЕРІ','ЗІРКА','ЦИРК'],
+    hard: ['УСПІХ','ГУМОР','ШИЯ','ЮРИСТ','СИМВОЛ','ФАХ','СПАЛАХ','ІНЖЕНЕР','ЛЮБОВ','ПЕЧИВО','ЛИСТЯ','ФОРМА','ГОРА','ХВІСТ','ФАНЕРА','ШТАНИ','СТРУМ',
+           'ДЕРЖАВА','ЄДНІСТЬ','ЦІННІСТЬ','ЩЕДРІСТЬ','ДРУЖБА','КУЛЬТУРА'],
 };
 
-// Flower images per level: index 0 = full flower, last = empty
-const FLOWER_IMAGES = {
-    easy:   ['easy_0','easy_1','easy_2'],
-    medium: ['medium_0','medium_1','medium_2','medium_3','medium_4'],
-    hard:   ['hard_0','hard_1','hard_2','hard_3','hard_4','hard_5','hard_6','hard_7','hard_8','hard_9'],
-};
-const WIN_IMAGES  = { easy: 'easywinnn', medium: 'midwinnn', hard: 'hardwinnn' };
 
 // hold ~2 s at ~30 fps
 const HOLD_FRAMES = 60;
@@ -36,6 +37,10 @@ let animFrameId = null;
 let videoEl = null;
 let canvasEl = null;
 let canvasCtx = null;
+
+// Dynamic model & frame buffer
+let dynamicMlpLayers = null;
+let dynamicFrameBuffer = [];   // array of 42-float arrays
 
 // ─── Pure-JS MLP inference ────────────────────────────────────
 
@@ -92,6 +97,33 @@ function classifyLandmarks(landmarks) {
     return LABELS[classId] || null;
 }
 
+// Classify a buffer of DYNAMIC_FRAMES landmark arrays (each length 42)
+function classifyDynamic(frameBuffer) {
+    if (!dynamicMlpLayers || frameBuffer.length < DYNAMIC_FRAMES) return null;
+    const input = frameBuffer.slice(-DYNAMIC_FRAMES).flat();  // 672 floats
+    let x = input;
+    const nDense = dynamicMlpLayers.filter(l => l.type === 'dense').length;
+    let densesSeen = 0;
+    for (const layer of dynamicMlpLayers) {
+        if (layer.type === 'dense') {
+            densesSeen++;
+            const W = layer.weights, b = layer.bias;
+            const out = new Array(W.length);
+            for (let i = 0; i < W.length; i++) {
+                let sum = b ? b[i] : 0;
+                const wi = W[i];
+                for (let j = 0; j < x.length; j++) sum += wi[j] * x[j];
+                out[i] = densesSeen < nDense ? relu(sum) : sum;
+            }
+            x = out;
+        } else if (layer.type === 'softmax') {
+            x = softmax(x);
+        }
+    }
+    const classId = x.indexOf(Math.max(...x));
+    return DYNAMIC_LABELS[classId] || null;
+}
+
 // ─── Game rendering ───────────────────────────────────────────
 
 function renderGame() {
@@ -118,10 +150,8 @@ function renderGame() {
         return;
     }
 
-    const { word, letterStates, currentIndex, won, wrongLetter, level, flowerIndex } = gameState;
+    const { word, letterStates, currentIndex, won, wrongLetter, level } = gameState;
     const levelTitle = { easy: t.levels[0].name, medium: t.levels[1].name, hard: t.levels[2].name }[level];
-    const flowerImages = FLOWER_IMAGES[level];
-    const flowerImg = flowerImages[Math.min(flowerIndex, flowerImages.length - 1)];
 
     const wordHtml = word.split('').map((ch, i) => {
         let cls = 'word-letter';
@@ -132,12 +162,10 @@ function renderGame() {
 
     const gameBody = won
         ? `<div class="win-area">
-               <img src="images/${WIN_IMAGES[level]}.svg" alt="win">
                <div class="win-message">${t.win_msg} 🎉</div>
            </div>`
         : `<div class="game-area">
                <div>
-                   <div class="camera-note">${t.camera_note}</div>
                    <div class="camera-container">
                        <canvas id="game-canvas"></canvas>
                        <div class="camera-label" id="camera-label">${t.camera_label}</div>
@@ -147,6 +175,9 @@ function renderGame() {
                    <div class="game-stat">
                        <div class="game-stat-label">${t.show_gesture}</div>
                        <div class="game-stat-value" id="current-letter-display" style="font-size:56px">${currentIndex < word.length ? word[currentIndex] : ''}</div>
+                   </div>
+                   <div class="game-stat" id="mode-hint" style="${DYNAMIC_LETTERS.has(currentIndex < word.length ? word[currentIndex] : '') ? '' : 'display:none'}">
+                       <div class="game-stat-label">🤚 ${t.dynamic_hint}</div>
                    </div>
                    <div class="game-stat">
                        <div class="game-stat-label">${t.detected_label}</div>
@@ -158,7 +189,6 @@ function renderGame() {
                        <div class="game-stat-label">${t.wrong_label}</div>
                        <div class="game-stat-value wrong">${wrongLetter}</div>
                    </div>` : ''}
-                   <img src="images/${flowerImg}.svg" id="flower-img" style="width:110px;margin:8px auto 0;display:block;" alt="flower">
                </div>
            </div>`;
 
@@ -188,7 +218,6 @@ function startGame(level) {
         currentIndex: 0,
         won: false,
         wrongLetter: null,
-        flowerIndex: 0,
         holdCounter: 0,
         lastDetected: null,
     };
@@ -205,7 +234,6 @@ function processLetter(letter) {
     if (!gameState) return;
     const { word, letterStates, currentIndex } = gameState;
     if (currentIndex >= word.length) return;
-    const maxFlower = FLOWER_IMAGES[gameState.level].length - 1;
 
     if (letter === word[currentIndex]) {
         letterStates[currentIndex] = 'correct';
@@ -219,7 +247,6 @@ function processLetter(letter) {
         }
     } else {
         gameState.wrongLetter = letter;
-        gameState.flowerIndex = Math.min(gameState.flowerIndex + 1, maxFlower);
     }
     gameState.holdCounter = 0;
     gameState.lastDetected = null;
@@ -228,7 +255,7 @@ function processLetter(letter) {
 
 function updateGameUI() {
     if (!gameState) return;
-    const { word, letterStates, currentIndex, wrongLetter, flowerIndex, level } = gameState;
+    const { word, letterStates, currentIndex, wrongLetter } = gameState;
 
     // Word display
     const wordEl = document.getElementById('word-display');
@@ -245,27 +272,24 @@ function updateGameUI() {
     const clEl = document.getElementById('current-letter-display');
     if (clEl) clEl.textContent = currentIndex < word.length ? word[currentIndex] : '';
 
-    // Flower
-    const flowerEl = document.getElementById('flower-img');
-    if (flowerEl) {
-        const imgs = FLOWER_IMAGES[level];
-        flowerEl.src = `images/${imgs[Math.min(flowerIndex, imgs.length-1)]}.svg`;
-    }
+    // Dynamic mode hint
+    const modeHint = document.getElementById('mode-hint');
+    if (modeHint) modeHint.style.display = DYNAMIC_LETTERS.has(word[currentIndex] || '') ? '' : 'none';
 
-    // Wrong letter display (just update inline without re-render)
+    // Wrong letter
     const lang = window.currentLang || 'uk';
     const t = window.texts[lang];
     const wrongDiv = document.querySelector('.game-stat-value.wrong');
     if (wrongDiv) {
         wrongDiv.textContent = wrongLetter || '';
+        wrongDiv.closest('.game-stat').style.display = wrongLetter ? '' : 'none';
     } else if (wrongLetter) {
-        // add wrong block to game-info if not present
         const gameInfo = document.querySelector('.game-info');
         if (gameInfo) {
             const div = document.createElement('div');
             div.className = 'game-stat';
             div.innerHTML = `<div class="game-stat-label">${t.wrong_label}</div><div class="game-stat-value wrong">${wrongLetter}</div>`;
-            gameInfo.insertBefore(div, flowerEl || null);
+            gameInfo.appendChild(div);
         }
     }
 }
@@ -332,20 +356,25 @@ function onHandResults(results) {
 
     canvasCtx.save();
     canvasCtx.clearRect(0, 0, canvasEl.width, canvasEl.height);
-    // Draw mirrored video
     canvasCtx.translate(canvasEl.width, 0);
     canvasCtx.scale(-1, 1);
     canvasCtx.drawImage(results.image, 0, 0, canvasEl.width, canvasEl.height);
     canvasCtx.restore();
 
+    if (!gameState || gameState.won) return;
+
+    const currentLetter = gameState.word[gameState.currentIndex] || '';
+    const isDynamic = DYNAMIC_LETTERS.has(currentLetter);
+
     if (!results.multiHandLandmarks || !results.multiHandLandmarks.length) {
         resetHoldState();
+        if (isDynamic) dynamicFrameBuffer = [];
         return;
     }
 
     const landmarks = results.multiHandLandmarks[0];
 
-    // Draw hand skeleton (mirrored)
+    // Draw skeleton (mirrored)
     canvasCtx.save();
     canvasCtx.translate(canvasEl.width, 0);
     canvasCtx.scale(-1, 1);
@@ -355,36 +384,59 @@ function onHandResults(results) {
     }
     canvasCtx.restore();
 
-    if (!gameState || gameState.won) return;
+    const detEl  = document.getElementById('detected-letter');
+    const progEl = document.getElementById('hold-progress');
+    const lblEl  = document.getElementById('camera-label');
 
-    const label = classifyLandmarks(landmarks);
-    if (!label) { resetHoldState(); return; }
+    if (isDynamic) {
+        // ── Dynamic mode: collect frames then classify ─────────────
+        const frame = preprocessLandmarks(landmarks);
+        dynamicFrameBuffer.push(frame);
 
-    const ukrainianLetter = LETTER_MAP[label] || '?';
+        const progress = Math.min(100, (dynamicFrameBuffer.length / DYNAMIC_FRAMES) * 100);
+        if (progEl) progEl.style.width = progress + '%';
+        if (detEl)  detEl.textContent = '…';
+        if (lblEl)  lblEl.textContent = `🤚 ${Math.round(progress)}%`;
 
-    if (label === gameState.lastDetected) {
-        gameState.holdCounter++;
+        if (dynamicFrameBuffer.length >= DYNAMIC_FRAMES) {
+            const letter = classifyDynamic(dynamicFrameBuffer);
+            dynamicFrameBuffer = [];
+            if (letter) {
+                if (detEl) detEl.textContent = letter;
+                if (lblEl) lblEl.textContent = `🤚 ${letter}`;
+                processLetter(letter);
+            }
+            if (progEl) progEl.style.width = '0%';
+        }
     } else {
-        gameState.holdCounter = 1;
-        gameState.lastDetected = label;
-    }
+        // ── Static mode: hold gesture for HOLD_FRAMES ─────────────
+        dynamicFrameBuffer = [];
+        const label = classifyLandmarks(landmarks);
+        if (!label) { resetHoldState(); return; }
 
-    const progress = Math.min(100, (gameState.holdCounter / HOLD_FRAMES) * 100);
+        const ukrainianLetter = LETTER_MAP[label] || '?';
 
-    const detEl   = document.getElementById('detected-letter');
-    const progEl  = document.getElementById('hold-progress');
-    const lblEl   = document.getElementById('camera-label');
-    if (detEl)  detEl.textContent = ukrainianLetter;
-    if (progEl) progEl.style.width = progress + '%';
-    if (lblEl)  lblEl.textContent  = `✋ ${ukrainianLetter}`;
+        if (label === gameState.lastDetected) {
+            gameState.holdCounter++;
+        } else {
+            gameState.holdCounter = 1;
+            gameState.lastDetected = label;
+        }
 
-    if (gameState.holdCounter >= HOLD_FRAMES) {
-        processLetter(ukrainianLetter);
+        const progress = Math.min(100, (gameState.holdCounter / HOLD_FRAMES) * 100);
+        if (detEl)  detEl.textContent = ukrainianLetter;
+        if (progEl) progEl.style.width = progress + '%';
+        if (lblEl)  lblEl.textContent  = `✋ ${ukrainianLetter}`;
+
+        if (gameState.holdCounter >= HOLD_FRAMES) {
+            processLetter(ukrainianLetter);
+        }
     }
 }
 
 function resetHoldState() {
     if (gameState) { gameState.holdCounter = 0; gameState.lastDetected = null; }
+    dynamicFrameBuffer = [];
     const detEl  = document.getElementById('detected-letter');
     const progEl = document.getElementById('hold-progress');
     if (detEl)  detEl.textContent = '—';
@@ -396,15 +448,16 @@ function resetHoldState() {
 async function loadModel() {
     const loadingEl = document.getElementById('model-loading');
     try {
-        const resp = await fetch('model/keypoint_classifier/model_weights.json');
-        if (!resp.ok) throw new Error('HTTP ' + resp.status);
-        mlpLayers = await resp.json();
-        console.log('Model loaded:', mlpLayers.length, 'layers');
+        const [r1, r2] = await Promise.all([
+            fetch('model/keypoint_classifier/model_weights.json'),
+            fetch('model/dynamic_classifier/dynamic_model_weights.json'),
+        ]);
+        if (r1.ok) { mlpLayers        = await r1.json(); console.log('Static model loaded:', mlpLayers.length, 'layers'); }
+        if (r2.ok) { dynamicMlpLayers = await r2.json(); console.log('Dynamic model loaded:', dynamicMlpLayers.length, 'layers'); }
     } catch (e) {
         console.warn('Could not load model weights:', e);
     }
     if (loadingEl) loadingEl.style.display = 'none';
-    // Refresh game page if it's showing the loading notice
     const gamePage = document.getElementById('page-game');
     if (gamePage && gamePage.style.display !== 'none' && !gameState) renderGame();
 }

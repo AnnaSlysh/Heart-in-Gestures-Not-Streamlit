@@ -24,8 +24,8 @@ body {
 
 /* ─── Layout ─────────────────────────────────────────────────── */
 #sidebar {
-    width: 220px;
-    min-width: 220px;
+    width: 400px;
+    min-width: 400px;
     background: hsl(161, 50%, 55%);
     display: flex;
     flex-direction: column;
@@ -37,24 +37,24 @@ body {
 }
 
 #main-content {
-    margin-left: 220px;
+    margin-left: 400px;
     flex: 1;
-    padding: 2rem 2rem 4rem;
-    max-width: calc(860px + 220px);
+    padding: 2rem 2.5rem 4rem;
     width: 100%;
+    min-width: 0;
 }
 
 .content-inner {
-    max-width: 860px;
+    max-width: 1100px;
 }
 
 /* ─── Sidebar ────────────────────────────────────────────────── */
 .sidebar-title {
     color: #ffffff;
     font-family: 'Nunito', sans-serif;
-    font-size: 20px;
+    font-size: 30px;
     font-weight: 900;
-    margin-bottom: 6px;
+    margin-bottom: 10px;
     padding: 0 6px;
 }
 
@@ -76,10 +76,10 @@ body {
     background: transparent;
     border: none;
     border-radius: 10px;
-    padding: 9px 14px;
+    padding: 12px 18px;
     color: #ffffff;
     font-family: 'Nunito', sans-serif;
-    font-size: 14px;
+    font-size: 20px;
     font-weight: 700;
     text-align: left;
     cursor: pointer;
@@ -104,9 +104,9 @@ body {
     border-radius: 8px;
     color: #fff;
     font-family: 'Nunito', sans-serif;
-    font-size: 13px;
+    font-size: 18px;
     font-weight: 800;
-    padding: 6px 4px;
+    padding: 10px 4px;
     cursor: pointer;
     transition: background 0.15s;
 }
@@ -649,7 +649,7 @@ body {
 }
 
 /* ─── Responsive ─────────────────────────────────────────────── */
-@media (max-width: 700px) {
+@media (max-width: 740px) {
     #sidebar { width: 60px; min-width: 60px; padding: 12px 6px; }
     .sidebar-title, .nav-link span, .lang-toggle { display: none; }
     #main-content { margin-left: 60px; padding: 1rem; }
