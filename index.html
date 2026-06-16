@@ -33,7 +33,6 @@
         <button class="nav-link" data-page="learning"><span id="nav-learning">Навчальні матеріали</span></button>
         <button class="nav-link" data-page="game"><span id="nav-game">Гра</span></button>
         <button class="nav-link" data-page="help"><span id="nav-help">Допомогти проекту</span></button>
-        <button class="nav-link" data-page="partners"><span id="nav-partners">Партнери / ГО</span></button>
     </div>
     <div class="lang-toggle">
         <button class="lang-btn active" id="btn-uk" onclick="setLang('uk')">УКР</button>
@@ -180,49 +179,8 @@
                 Напишіть нам: <a href="mailto:heartingestures@gmail.com">heartingestures@gmail.com</a>
             </div>
         </div>
-        <div class="sign-off" id="sign-off">З повагою, команда Grlpwr</div>
     </section>
 
-    <!-- ── Partners ────────────────────────────────────────────── -->
-    <section id="page-partners" class="page-section" style="display:none">
-        <div class="page-hero">
-            <div class="title_header" id="partners-title">Партнери / ГО</div>
-            <p id="partners-tagline">Організації, що об'єднують людей з порушеннями слуху</p>
-        </div>
-        <div class="partner-card">
-            <img src="https://cnap-pl.gov.ua/UTOG_OVAL.png" alt="УТОГ">
-            <div>
-                <div class="partner-name" id="utog-name">УТОГ</div>
-                <div class="partner-body" id="utog-text">
-                    Всеукраїнська громадська організація людей з вадами слуху, заснована у <strong>1933 році</strong>.
-                    Є членом Всесвітньої федерації глухих.
-                    Регіональні та територіальні організації УТОГ об'єднують понад <strong>50 000 громадян</strong> України з порушеннями слуху та мови.
-                </div>
-            </div>
-        </div>
-        <div class="partner-card">
-            <img src="https://bcrivne.com/wp-content/uploads/2018/09/IvasportLOGO.jpg" alt="ІНВАСПОРТ">
-            <div>
-                <div class="partner-name" id="invasport-name">ІНВАСПОРТ</div>
-                <div class="partner-body" id="invasport-text">
-                    Всеукраїнська громадська організація спортивного спрямування.
-                    Спортивна федерація глухих України забезпечує розвиток <strong>олімпійського руху</strong> і спорту для людей з вадами слуху по всій країні.
-                </div>
-            </div>
-        </div>
-        <div class="partner-card">
-            <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRa7-D_kDabaXFJgBVHmstmmsyAZfTLstru9A&s" alt="ПОГ">
-            <div>
-                <div class="partner-name" id="pog-name">ПОГ — Центр соціального бізнесу</div>
-                <div class="partner-body" id="pog-text">
-                    Надає послуги перекладу жестової мови у будь-якому зручному форматі.
-                    Оскільки багато сучасних слів не існують у жестовій мові,
-                    команда активно використовує <strong>українську дактильну абетку</strong>.
-                    Також проводить заходи з безбар'єрності.
-                </div>
-            </div>
-        </div>
-    </section>
 
 </div><!-- .content-inner -->
 </main>
@@ -234,7 +192,7 @@ window.currentLang = 'uk';
 
 window.texts = {
     uk: {
-        nav: ['Про проект','Правила гри','Навчальні матеріали','Гра','Допомогти проекту','Партнери / ГО'],
+        nav: ['Про проект','Правила гри','Навчальні матеріали','Гра','Допомогти проекту'],
         game_title: 'Гра',
         game_tagline: 'Оберіть рівень складності та починайте',
         play_btn: 'Грати',
@@ -258,7 +216,7 @@ window.texts = {
         hard_label: 'Складний рівень',
     },
     en: {
-        nav: ['About Us','Game Rules','Educational Materials','Game','Support Project','Partners / NGOs'],
+        nav: ['About Us','Game Rules','Educational Materials','Game','Support Project'],
         game_title: 'Game',
         game_tagline: 'Choose a difficulty level and start playing',
         play_btn: 'Play',
@@ -284,7 +242,7 @@ window.texts = {
 };
 
 // ─── Navigation ────────────────────────────────────────────────
-const pages = ['about','rules','learning','game','help','partners'];
+const pages = ['about','rules','learning','game','help'];
 
 function showPage(id) {
     pages.forEach(p => {
@@ -358,23 +316,12 @@ const TRANSLATIONS = {
     'spread-text':    { uk: 'Розкажіть про наш проєкт друзям, у соцмережах чи на заходах.<br><br><a href="https://www.instagram.com/heartingestures_/profilecard/?igsh=bHd2bGJnaWg4Ynp4" target="_blank">Наш Instagram</a>', en: 'Tell your friends about our project, share it on social media or at events.<br><br><a href="https://www.instagram.com/heartingestures_/profilecard/?igsh=bHd2bGJnaWg4Ynp4" target="_blank">Our Instagram</a>' },
     'partner-title':  { uk: 'Партнерство', en: 'Partnership' },
     'partner-text':   { uk: 'Ми відкриті для співпраці з організаціями, що поділяють наші цінності!<br>Напишіть нам: <a href="mailto:heartingestures@gmail.com">heartingestures@gmail.com</a>', en: 'We are open to cooperation with organisations that share our values!<br>Write to us: <a href="mailto:heartingestures@gmail.com">heartingestures@gmail.com</a>' },
-    'sign-off':       { uk: 'З повагою, команда Grlpwr', en: 'Respectfully, Grlpwr Team' },
-    // partners page
-    'partners-title':    { uk: 'Партнери / ГО', en: 'Partners / NGOs' },
-    'partners-tagline':  { uk: 'Організації, що об\'єднують людей з порушеннями слуху', en: 'Organisations uniting people with hearing impairments' },
-    'utog-name':         { uk: 'УТОГ', en: 'UTOG' },
-    'utog-text':         { uk: 'Всеукраїнська громадська організація людей з вадами слуху, заснована у <strong>1933 році</strong>. Є членом Всесвітньої федерації глухих. Регіональні та територіальні організації УТОГ об\'єднують понад <strong>50 000 громадян</strong> України з порушеннями слуху та мови.', en: 'The All-Ukrainian Public Organisation of People with Hearing Impairments, founded in <strong>1933</strong>. A member of the World Federation of the Deaf. Regional and territorial UTOG organisations unite over <strong>50,000 Ukrainian citizens</strong> with hearing and speech impairments.' },
-    'invasport-name':    { uk: 'ІНВАСПОРТ', en: 'INVASPORT' },
-    'invasport-text':    { uk: 'Всеукраїнська громадська організація спортивного спрямування. Спортивна федерація глухих України забезпечує розвиток <strong>олімпійського руху</strong> і спорту для людей з вадами слуху по всій країні.', en: 'An all-Ukrainian public sports organisation. The Sports Federation of the Deaf of Ukraine ensures the development of the <strong>Olympic movement</strong> and sports for people with hearing disabilities across the country.' },
-    'pog-name':          { uk: 'ПОГ — Центр соціального бізнесу', en: 'POG — Centre for Social Business' },
-    'pog-text':          { uk: 'Надає послуги перекладу жестової мови у будь-якому зручному форматі. Оскільки багато сучасних слів не існують у жестовій мові, команда активно використовує <strong>українську дактильну абетку</strong>. Також проводить заходи з безбар\'єрності.', en: 'Provides sign language interpretation services in any convenient format. Since many modern words have no sign equivalent, the team actively uses the <strong>Ukrainian dactylic alphabet</strong>. They also organise accessibility and barrier-free events.' },
     // nav labels
     'nav-about':    { uk: 'Про проект', en: 'About Us' },
     'nav-rules':    { uk: 'Правила гри', en: 'Game Rules' },
     'nav-learning': { uk: 'Навчальні матеріали', en: 'Educational Materials' },
     'nav-game':     { uk: 'Гра', en: 'Game' },
     'nav-help':     { uk: 'Допомогти проекту', en: 'Support Project' },
-    'nav-partners': { uk: 'Партнери / ГО', en: 'Partners / NGOs' },
 };
 
 function setLang(lang) {
